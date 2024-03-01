@@ -1,18 +1,61 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import { MainPage } from "../component/global-fuction";
+import data from "./database.json";
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+const data_auth = {
+  email: "eve.holt@reqres.in",
+  password: "cityslicka",
+};
 
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
+const component = new MainPage();
+
+test("Register", async ({ request }) => {
+  const response = await request.post(`/api/register`, {
+    data: data_auth,
+  });
+  await expect(response.status()).toBe(200);
+  const responseBody = await response.json();
+  await expect(responseBody).toBeTruthy();
+  await component.checkKeyOfJson(responseBody, ["id", "token"]);
 });
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
+test("login", async ({ request }) => {
+  const response = await request.post(`/api/login`, {
+    data: data_auth,
+  });
+  await expect(response.status()).toBe(200);
+  const responseBody = await response.json();
+  await expect(responseBody).toBeTruthy();
+  await component.checkKeyOfJson(responseBody, ["token"]);
+});
 
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
+test("Get all user", async ({ request }) => {
+  const response = await request.get(`/api/users`);
+  await expect(response.status()).toBe(200);
+  const responseBody = await response.json();
+  await expect(responseBody).toBeTruthy();
+  await component.checkKeyOfJson(responseBody.data[0], [
+    "id",
+    "email",
+    "first_name",
+    "last_name",
+    "avatar",
+  ]);
+});
 
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+data.data_user.forEach(async (value, index) => {
+  test(`Create user: ${index} `, async ({ request }) => {
+    const response = await request.post(`/api/users`, {
+      data: value,
+    });
+    await expect(response.status()).toBe(201);
+    const responseBody = await response.json();
+    await expect(responseBody).toBeTruthy();
+    await component.checkKeyOfJson(responseBody, [
+      "name",
+      "job",
+      "id",
+      "createdAt",
+    ]);
+  });
 });
