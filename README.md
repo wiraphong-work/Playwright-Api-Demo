@@ -1,2 +1,1 @@
-API testing demo with playwright 
-Website: https://reqres.in/
+API testing demo with playwright website: https://reqres.in/
